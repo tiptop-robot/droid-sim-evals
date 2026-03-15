@@ -155,7 +155,8 @@ class TiptopWebsocketClient(InferenceClient):
         self._last_planning_time = server_timing.get("infer_ms", elapsed * 1000) / 1000.0
 
         if response["success"]:
-            self._plan = response["plan"]
+            # Filter out metadata steps (prepended by serialize_plan when q_init is provided)
+            self._plan = [s for s in response["plan"] if s["type"] != "metadata"]
             _log.info(f"Received plan with {len(self._plan)} steps in {elapsed:.1f}s")
             for i, step in enumerate(self._plan):
                 if step["type"] == "trajectory":
@@ -164,8 +165,10 @@ class TiptopWebsocketClient(InferenceClient):
                     _log.info(
                         f"  Step {i}: trajectory ({orig_len} -> {subsampled_len} waypoints after subsampling)"
                     )
-                else:
+                elif step["type"] == "gripper":
                     _log.info(f"  Step {i}: gripper {step['action']}")
+                else:
+                    _log.info(f"  Step {i}: unknown step type '{step['type']}'")
         else:
             error_msg = response.get('error', 'unknown')
             _log.error(f"Tiptop server returned error: {error_msg}")
