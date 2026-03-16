@@ -19,6 +19,7 @@ import numpy as np
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+logger = logging.getLogger(__name__)
 
 import cv2
 import gymnasium as gym
@@ -81,7 +82,7 @@ def main(
     obs, _ = env.reset()  # Need second render cycle to get correctly loaded materials
 
     # Connect to tiptop websocket server
-    print(f"Connecting to tiptop server at ws://{ws_host}:{ws_port}...")
+    logger.info(f"Connecting to tiptop server at ws://{ws_host}:{ws_port}...")
     client = TiptopWebsocketClient(host=ws_host, port=ws_port)
 
     video_dir = Path("runs") / datetime.now().strftime("%Y-%m-%d") / datetime.now().strftime("%H-%M-%S")
@@ -108,12 +109,12 @@ def main(
                 try:
                     ret = client.infer(obs, instruction)
                 except Exception as e:
-                    print(f"Planning failed for episode {ep+1}: {e}. Skipping.")
+                    logger.error(f"Planning failed for episode {ep+1}: {e}. Skipping.")
                     plan_failed = True
                     break
 
                 if client.plan_done:
-                    print(f"Plan fully executed at step {frame_idx}")
+                    logger.info(f"Plan fully executed at step {frame_idx}")
                     break
 
                 viz = np.concatenate([ret["right_image"], ret["wrist_image"]], axis=1)
@@ -145,24 +146,23 @@ def main(
                 fps=video_fps,
             )
             video = []
-            print(f"Saved video to {video_dir / f'tiptop_scene{scene}_ep{ep}.mp4'}")
+            logger.info(f"Saved video to {video_dir / f'tiptop_scene{scene}_ep{ep}.mp4'}")
 
     client.close()
     env.close()
     simulation_app.close()
 
-    print("\n" + "=" * 60)
-    print("  Run complete")
-    print("=" * 60)
-    print(f"  Instruction : {instruction}")
-    print(f"  Scene       : {scene}")
-    print(f"  Episodes    : {episodes}")
-    print(f"  Output dir  : {video_dir.resolve()}")
+    video_lines = [
+        f"  Instruction : {instruction}",
+        f"  Scene       : {scene}",
+        f"  Episodes    : {episodes}",
+        f"  Output dir  : {video_dir.resolve()}",
+    ]
     for ep in range(episodes):
         video_path = video_dir / f"tiptop_scene{scene}_ep{ep}.mp4"
         if video_path.exists():
-            print(f"  Video ep{ep}   : {video_path.resolve()}")
-    print("=" * 60)
+            video_lines.append(f"  Video ep{ep}   : {video_path.resolve()}")
+    logger.info("Run complete\n" + "\n".join(video_lines))
 
 
 if __name__ == "__main__":

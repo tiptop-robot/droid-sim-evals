@@ -1,9 +1,13 @@
 import argparse
+import logging
 import os
 import h5py
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+logger = logging.getLogger(__name__)
 
 import cv2
 import gymnasium as gym
@@ -253,11 +257,9 @@ def main(
                     break
 
             client.reset()
-            mediapy.write_video(
-                video_dir / f"cutamp_scene{scene}_ep{ep}.mp4",
-                video,
-                fps=15,
-            )
+            video_path = video_dir / f"cutamp_scene{scene}_ep{ep}.mp4"
+            mediapy.write_video(video_path, video, fps=15)
+            logger.info(f"Saved video to {video_path}")
             video = []
 
     env.close()

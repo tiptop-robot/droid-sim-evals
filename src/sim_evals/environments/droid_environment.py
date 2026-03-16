@@ -1,3 +1,4 @@
+import logging
 import torch
 import isaaclab.sim as sim_utils
 import isaaclab.envs.mdp as mdp
@@ -25,6 +26,8 @@ from isaaclab.sensors import CameraCfg
 from .nvidia_droid import NVIDIA_DROID
 
 DATA_PATH = Path(__file__).parent / "../../../assets/"
+
+logger = logging.getLogger(__name__)
 
 @configclass
 class SceneCfg(InteractiveSceneCfg):
@@ -113,7 +116,7 @@ class SceneCfg(InteractiveSceneCfg):
                 continue
 
             name = child.GetName()
-            print(f"Found rigid body: {name}")
+            logger.debug(f"Found rigid body: {name}")
             pos = child.GetAttribute("xformOp:translate").Get()
             rot = child.GetAttribute("xformOp:orient").Get()
             rot = (rot.GetReal(), rot.GetImaginary()[0], rot.GetImaginary()[1], rot.GetImaginary()[2])

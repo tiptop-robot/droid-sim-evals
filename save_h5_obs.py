@@ -1,9 +1,13 @@
 """Save an initial observation from a DROID sim scene to an H5 file."""
+import argparse
+import logging
 import h5py
 import torch
 import gymnasium as gym
 import tyro
-import argparse
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+logger = logging.getLogger(__name__)
 
 
 def main(scene: int = 1, output: str = "observation.h5"):
@@ -45,7 +49,7 @@ def main(scene: int = 1, output: str = "observation.h5"):
         f.create_dataset("quat_w_ros",       data=to_numpy(p["wrist_cam_quat_w"]))  # [w, x, y, z]
         f.create_dataset("q_init",           data=to_numpy(p["arm_joint_pos"]))
 
-    print(f"Saved observation to {output}")
+    logger.info(f"Saved observation to {output}")
     env.close()
     simulation_app.close()
 
