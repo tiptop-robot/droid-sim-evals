@@ -1,7 +1,7 @@
 import argparse
+import json
 import logging
 import os
-import h5py
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -19,17 +19,23 @@ from tqdm import tqdm
 from openpi_client import image_tools
 
 
-def load_plan_from_h5(h5_path: str) -> list:
-    plan = []
-    with h5py.File(h5_path, "r") as f:
-        for key in sorted(f.keys()):
-            grp = f[key]
-            step = dict(grp.attrs)
-            if "q_init" in grp:
-                step["q_init"] = grp["q_init"][:]
-            if "positions" in grp:
-                step["positions"] = grp["positions"][:]
-            plan.append(step)
+def load_plan_from_json(json_path: str) -> dict:
+    """Load a serialized TiPToP plan from a JSON file.
+
+    Expected format (from tiptop planning.serialize_plan):
+        {"version": "...", "q_init": [...], "steps": [...]}
+    Each step is either:
+        {"type": "trajectory", "positions": [[...], ...], ...}
+        {"type": "gripper", "action": "open"|"close", ...}
+    """
+    with open(json_path) as f:
+        plan = json.load(f)
+    plan["q_init"] = np.array(plan["q_init"], dtype=np.float32)
+    for step in plan["steps"]:
+        if step["type"] == "trajectory":
+            step["positions"] = np.array(step["positions"], dtype=np.float32)
+            if "velocities" in step:
+                step["velocities"] = np.array(step["velocities"], dtype=np.float32)
     return plan
 
 
@@ -38,22 +44,17 @@ class LocalPlanClient:
 
     def __init__(
         self,
-        plan: list,
+        plan: dict,
         gripper_action_steps: int = 20,
         sim_control_hz: float = 15.0,
         curobo_interp_hz: float = 50.0,
         q_init_tol: float = 0.02,
     ) -> None:
-        self._plan = []
-        self._q_init = None
+        self._plan = plan["steps"]
+        self._q_init = np.asarray(plan["q_init"], dtype=np.float32) if "q_init" in plan else None
         self._gripper_action_steps = gripper_action_steps
         self._waypoint_stride = max(1, int(round(curobo_interp_hz / sim_control_hz)))
         self._q_init_tol = q_init_tol
-
-        for step in plan:
-            if self._q_init is None and "q_init" in step:
-                self._q_init = np.asarray(step["q_init"], dtype=np.float32)
-            self._plan.append(step)
 
         self._current_plan_step = 0
         self._current_trajectory: Optional[np.ndarray] = None
@@ -178,20 +179,20 @@ class LocalPlanClient:
         }
 
 def main(
-        h5_path: str,
+        json_path: str,
         episodes: int = 1,
         headless: bool = True,
         scene: int = 1,
         ):
-    """Run evaluation using a local cuTAMP plan H5 file.
+    """Run evaluation using a local cuTAMP plan JSON file.
 
     Args:
+        json_path: Path to cuTAMP plan JSON file (from tiptop planning.serialize_plan).
         episodes: Number of episodes to run.
         headless: If True (default), runs without the Isaac Sim GUI and only saves a video file.
             Set to False to open the Isaac Sim viewport for live visualization:
-            ``uv run python replay_h5_traj.py --headless False``
+            ``uv run python replay_json_traj.py --headless False``
         scene: Scene number (1-5).
-        h5_path: Path to cuTAMP plan H5 file.
     """
     # launch omniverse app with arguments (inside function to prevent overriding tyro)
     from isaaclab.app import AppLauncher
@@ -222,7 +223,7 @@ def main(
     obs, _ = env.reset()
     obs, _ = env.reset() # need second render cycle to get correctly loaded materials
 
-    cutamp_plan = load_plan_from_h5(h5_path)
+    cutamp_plan = load_plan_from_json(json_path)
     client = LocalPlanClient(cutamp_plan, gripper_action_steps=20, sim_control_hz=15.0, curobo_interp_hz=50.0)
 
     video_dir = Path("runs") / datetime.now().strftime("%Y-%m-%d") / datetime.now().strftime("%H-%M-%S")
