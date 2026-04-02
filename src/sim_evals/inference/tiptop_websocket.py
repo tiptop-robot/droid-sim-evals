@@ -139,6 +139,8 @@ class TiptopWebsocketClient(InferenceClient):
         return buf.getvalue()
 
     def _query_server(self, raw_obs: dict, curr_obs: dict, instruction: str) -> None:
+        if self._ws is None:
+            self._connect()
         _log.info(f"Querying tiptop server for task: '{instruction}'")
 
         request = self._build_request(raw_obs, curr_obs, instruction)
@@ -150,6 +152,10 @@ class TiptopWebsocketClient(InferenceClient):
         start_time = time.time()
         response = json.loads(self._ws.recv())
         elapsed = time.time() - start_time
+
+        # Close connection immediately — not needed again until next episode
+        self._ws.close()
+        self._ws = None
 
         # Store planning time from server (infer_ms) or fall back to client-measured elapsed
         server_timing = response.get("server_timing", {})
