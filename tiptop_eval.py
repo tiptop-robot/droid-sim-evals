@@ -9,7 +9,7 @@ Usage:
     # (in tiptop-robot) pixi run python -m tiptop.websocket_server --port 8765
 
     # Then run this evaluation:
-    uv run python tiptop_ws_eval.py --scene 1 --ws-host localhost --ws-port 8765
+    uv run python tiptop_eval.py --scene 1 --ws-host localhost --ws-port 8765
 """
 
 import argparse
