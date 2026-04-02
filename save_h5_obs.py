@@ -12,12 +12,14 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(messag
 logger = logging.getLogger(__name__)
 
 
-def main(scene: int = 1, output: str = "observation.h5"):
+def main(scene: int = 1, variant: int = 0, output: str = "observation.h5", headless: bool = True):
     """Capture and save an initial observation from the simulator.
 
     Args:
-        scene: Scene number (1, 2, or 3).
+        scene: Scene number (1-5).
+        variant: Scene variant (0-9).
         output: Path to save the H5 file.
+        headless: Run without GUI. Set to False to open the Isaac Sim viewport.
     """
     from isaaclab.app import AppLauncher
 
@@ -25,7 +27,7 @@ def main(scene: int = 1, output: str = "observation.h5"):
     AppLauncher.add_app_launcher_args(parser)
     args_cli, _ = parser.parse_known_args()
     args_cli.enable_cameras = True
-    args_cli.headless = True
+    args_cli.headless = headless
     app_launcher = AppLauncher(args_cli)
     simulation_app = app_launcher.app
 
@@ -33,7 +35,7 @@ def main(scene: int = 1, output: str = "observation.h5"):
     from isaaclab_tasks.utils import parse_env_cfg
 
     env_cfg = parse_env_cfg("DROID", device=args_cli.device, num_envs=1, use_fabric=True)
-    env_cfg.set_scene(str(scene))
+    env_cfg.set_scene(str(scene), variant)
     env = gym.make("DROID", cfg=env_cfg)
 
     obs, _ = env.reset()

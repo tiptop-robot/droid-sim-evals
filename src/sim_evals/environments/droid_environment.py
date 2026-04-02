@@ -398,5 +398,5 @@ class EnvCfg(ManagerBasedRLEnvCfg):
         self.rerender_on_reset = True
 
     
-    def set_scene(self, scene_name: str):
-        self.scene.dynamic_scene(scene_name)
+    def set_scene(self, scene_name: str, variant: int = 0):
+        self.scene.dynamic_scene(f"{scene_name}_{variant}")
