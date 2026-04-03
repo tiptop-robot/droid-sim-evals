@@ -115,7 +115,7 @@ XLA_PYTHON_CLIENT_MEM_FRACTION=0.5 uv run scripts/serve_policy.py policy:checkpo
 
 Finally, run the evaluation script:
 ```bash
-python run_eval.py --episodes [INT] --scene [INT] --variant [INT] --headless
+python tiptop_eval.py --scene <scene_id> --variant <variant_id> --instruction "<instruction>"
 ```
 
 ## Minimal Example
