@@ -79,7 +79,7 @@ A cluttered version of Scene 2 with multiple colored blocks as distractors.
 Clone the repo
 ```bash
 git clone --recurse-submodules git@github.com:tiptop-robot/droid-sim-evals.git
-cd pi-sim-evals
+cd droid-sim-evals
 ```
 
 Install uv (see: https://github.com/astral-sh/uv#installation)
@@ -99,7 +99,7 @@ source .venv/bin/activate
 
 First, make sure you download the simulation assets into the root of this directory
 ```bash
-curl -O https://pi-sim-assets.s3.us-east-1.amazonaws.com/assets.zip 
+curl -O https://tiptop-sim-assets.s3.us-east-1.amazonaws.com/assets.zip 
 unzip assets.zip
 ```
 
@@ -111,17 +111,11 @@ checkout [openpi](https://github.com/Physical-Intelligence/openpi) and use the `
 XLA_PYTHON_CLIENT_MEM_FRACTION=0.5 uv run scripts/serve_policy.py policy:checkpoint --policy.config=pi05_droid_jointpos_polaris --policy.dir=gs://openpi-assets/checkpoints/pi05_droid_jointpos
 ```
 
-To launch a pi0.5-DROID policy, checkout [openpi](https://github.com/Physical-Intelligence/openpi/tree/main) to the `main` branch and run the command below in a separate terminal
-``` bash
-XLA_PYTHON_CLIENT_MEM_FRACTION=0.5 uv run scripts/serve_policy.py policy:checkpoint --policy.config=pi05_droid --policy.dir=gs://openpi-assets/checkpoints/pi05_droid
-```
-pi0.5-DROID outputs joint velocities, but the simulation script converts to joint positions.
-
 **Note**: We set `XLA_PYTHON_CLIENT_MEM_FRACTION=0.5` to avoid JAX hogging all the GPU memory (since Isaac Sim needs to use the same GPU).
 
 Finally, run the evaluation script:
 ```bash
-python run_eval.py --episodes [INT] --scene [INT] --variant [INT] --headless --policy [pi0.5, pi0]
+python run_eval.py --episodes [INT] --scene [INT] --variant [INT] --headless
 ```
 
 ## Minimal Example
