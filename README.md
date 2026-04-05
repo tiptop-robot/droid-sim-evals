@@ -2,13 +2,13 @@
 
 This repository contains scripts for evaluating DROID policies (and planners!) in a simple ISAAC Sim environment.
 
-The simulator includes **5 scenes** (1–5), each with multiple variants that place objects in different configurations:
+The simulator includes **5 scenes** (1–5), each with 10 variants that place objects in different configurations:
 
 | Scene | Variants |
 |-------|----------|
 | 1     | 10 (0–9) |
 | 2     | 10 (0–9) |
-| 3     | 11 (0–8, 10–11)    |
+| 3     | 11 (0–9) |
 | 4     | 10 (0–9) |
 | 5     | 10 (0–9) |
 
